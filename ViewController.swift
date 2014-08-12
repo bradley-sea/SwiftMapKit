@@ -19,6 +19,15 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         
         self.locationManager.delegate = self
         self.locationManager.requestAlwaysAuthorization()
+       
+    
+        var monitoringavail = CLLocationManager.isMonitoringAvailableForClass(CLCircularRegion)
+        if monitoringavail == true {
+            println("monitoring available")
+        }
+        else {
+            println("monitoring not available")
+        }
 
         self.map = MKMapView(frame: self.view.frame)
         self.view.addSubview(self.map)
@@ -26,11 +35,26 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         
         let longpress = UILongPressGestureRecognizer(target: self, action: "handleLongPress:")
         self.map.addGestureRecognizer(longpress)
+        self.map.showsUserLocation = true
+
+        
+    var status = UIApplication.sharedApplication().backgroundRefreshStatus as UIBackgroundRefreshStatus
+        
+        println(status.toRaw())
+        
     
         // Do any additional setup after loading the view, typically from a nib.
     }
     
     override func viewWillAppear(animated: Bool) {
+        
+        var locationStatus = CLLocationManager.authorizationStatus() as CLAuthorizationStatus
+        switch locationStatus {
+        case .Authorized:
+            println("authorized")
+        default:
+            println("default")
+        }
     
     }
 
@@ -40,10 +64,9 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
     }
     
     func locationManager(manager: CLLocationManager!, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
-        println("here")
         switch status {
         case .Authorized:
-            self.map.showsUserLocation = true
+            //self.map.showsUserLocation = true
             println("authorized")
         default :
             println("uh oh")
@@ -63,6 +86,17 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         return annotV
     }
     
+    func mapView(mapView: MKMapView!, annotationView view: MKAnnotationView!, calloutAccessoryControlTapped control: UIControl!) {
+        let reminderVC = self.storyboard.instantiateViewControllerWithIdentifier("ReminderVC") as ReminderViewController
+        reminderVC.annotation = view.annotation
+        reminderVC.locationManager = self.locationManager
+        self.navigationController.pushViewController(reminderVC, animated: true)
+    }
+    
+    func locationManager(manager: CLLocationManager!, didEnterRegion region: CLRegion!) {
+        self.performSegueWithIdentifier("yay", sender: self)
+    }
+    
     func handleLongPress(sender : AnyObject) {
         
         if let longPress = sender as? UILongPressGestureRecognizer {
@@ -80,9 +114,6 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
                 return
             }
         }
-        
-        
-        
     }
 }
 
